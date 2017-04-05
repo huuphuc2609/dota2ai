@@ -8,6 +8,7 @@
 --------------------------------------------------------------------------------
 function Dota2AI:OnGameRulesStateChange()
   local nNewState = GameRules:State_Get()  
+  GameRules:SetHeroSelectionTime(99)
   if nNewState == DOTA_GAMERULES_STATE_INIT then
     self:Reset()
   elseif nNewState == DOTA_GAMERULES_STATE_HERO_SELECTION then
@@ -31,8 +32,7 @@ function Dota2AI:OnGameRulesStateChange()
     --Tutorial:AddBot( sHeroSelection[3], "top", "easy", true );
     --Tutorial:AddBot( sHeroSelection[4], "bot", "easy", true );
     --Tutorial:AddBot( sHeroSelection[5], "bot", "easy", true );
-    
-    
+        
     --Tutorial:AddBot( sHeroSelection[6], "top", "easy", false );
     --Tutorial:AddBot( sHeroSelection[7], "top", "easy", false );
     Tutorial:AddBot( Dota2AI.sHeroSelection[8], "mid", "easy", false );
@@ -82,7 +82,8 @@ end
  
  -- Helper function for Dota2AI:OnHeroLevelUp
   function Dota2AI:BotLevelUp(heroEntity) 
-	  request = CreateHTTPRequest( "POST", Dota2AI.baseURL .. "/levelup")
+	  --request = CreateHTTPRequest( "POST", Dota2AI.baseURL .. "/levelup")
+	  request = CreateHTTPRequestScriptVM("POST","http://localhost:8080/levelup")
 	  request:SetHTTPRequestHeaderValue("Accept", "application/json")
 	  request:SetHTTPRequestHeaderValue("Content-Length", "0")
 	  request:Send( function( result ) 
@@ -109,11 +110,13 @@ end
 	  if heroEntity:GetAbilityPoints() > 0 then
 		self:BotLevelUp(heroEntity)
 	  end
-	  request = CreateHTTPRequest( "POST", Dota2AI.baseURL .. "/update")
+	  --request = CreateHTTPRequest( "POST", Dota2AI.baseURL .. "/update")
+	  request = CreateHTTPRequestScriptVM("POST","http://localhost:8080/update")
 	  request:SetHTTPRequestHeaderValue("Accept", "application/json")
 	  request:SetHTTPRequestHeaderValue("X-Jersey-Tracing-Threshold", "VERBOSE" )
 	  request:SetHTTPRequestRawPostBody('application/json', self:JSONWorld(heroEntity))
 	  request:Send( function( result ) 
+	  print(result["StatusCode"] .. " " .. result["Body"])
 		if result["StatusCode"] == 200 then       
 		  self:ParseHeroCommand(heroEntity, result['Body']) 
 		else
@@ -139,7 +142,8 @@ end
  -- I used it to control my test implementation, i.e. "bot go", "bot retreat", "bot attack" as simple chat commands
  --------------------------------------------------------------------------------
  function Dota2AI:OnPlayerChat(event)
-  request = CreateHTTPRequest( "POST", Dota2AI.baseURL .. "/chat")
+  --request = CreateHTTPRequest( "POST", Dota2AI.baseURL .. "/chat")
+  request = CreateHTTPRequestScriptVM("POST","http://localhost:8080/chat")
   request:SetHTTPRequestHeaderValue("Accept", "application/json")
   request:SetHTTPRequestHeaderValue("X-Jersey-Tracing-Threshold", "VERBOSE" )
   request:SetHTTPRequestRawPostBody('application/json', self:JSONChat(event))
@@ -163,8 +167,9 @@ end
  end
  
  function BotPick()
-	local baseURL = CustomNetTables:GetTableValue( "game_state", "base_url" )["value"]
-	request = CreateHTTPRequest( "POST", baseURL .. "/select")
+	--local baseURL = CustomNetTables:GetTableValue( "game_state", "base_url" )["value"]
+	-- request = CreateHTTPRequest( "POST", baseURL .. "/select")
+	request = CreateHTTPRequestScriptVM("POST","http://localhost:8080/select")
 	request:SetHTTPRequestHeaderValue("Accept", "application/json")
 	request:SetHTTPRequestHeaderValue("X-Jersey-Tracing-Threshold", "VERBOSE" )
 	request:SetHTTPRequestHeaderValue("Content-Length", "0")
